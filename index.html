@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1012">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Drehzahl">
+<title>MOSFET · Drehzahl – Plattenspieler-Messlabor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1012;--panel:#16171a;--panel2:#1f2125;--line:#2c2e33;--txt:#edebe6;--mut:#a09e99;
+  --amber:#cbb68a;--green:#90ba8b;--red:#de6b5e;--blue:#8fb4d8;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--sans:"Manrope",system-ui,-apple-system,sans-serif;--disp:"Bodoni Moda",Didot,Georgia,serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans)}
+body{padding:calc(env(safe-area-inset-top) + 10px) 14px calc(env(safe-area-inset-bottom) + 30px)}
+.wrap{max-width:560px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-family:var(--disp);font-size:22px;margin:0;letter-spacing:.04em;font-weight:500}
+.brand span{font-size:11px;color:var(--mut);display:block;font-weight:500;letter-spacing:.2em;text-transform:uppercase}
+.logo{width:30px;height:30px}
+button{font:inherit;color:inherit;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;font-weight:600;cursor:pointer}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.4}
+.iconbtn{width:36px;height:36px;padding:0;border-radius:50%;font-size:16px}
+.seg{display:grid;grid-template-columns:repeat(5,1fr);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px;margin-bottom:12px}
+.seg button{border:0;background:transparent;padding:8px 0;font-family:var(--mono);font-size:14px;color:var(--mut);border-radius:9px}
+.seg button.on{background:var(--panel2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.readout{text-align:center;padding:18px 14px 16px}
+.src{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.12em;font-weight:600;min-height:15px}
+.big{font-family:var(--mono);font-weight:500;font-size:68px;line-height:1.05;letter-spacing:-.03em;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.big small{font-size:20px;color:var(--mut);letter-spacing:0;margin-left:4px}
+.dev{font-family:var(--mono);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.verdict{font-size:14px;color:var(--mut);margin-top:4px;min-height:18px}
+.tune{position:relative;height:42px;margin:16px 4px 4px}
+.tune .track{position:absolute;left:0;right:0;top:12px;height:10px;border-radius:6px;background:linear-gradient(90deg,#de6b5e33 0,#cbb68a33 35%,#90ba8b55 45%,#90ba8b55 55%,#cbb68a33 65%,#de6b5e33 100%)}
+.tune .ctr{position:absolute;left:50%;top:6px;width:2px;height:22px;background:var(--green);transform:translateX(-1px);opacity:.8}
+.tune .needle{position:absolute;top:2px;width:4px;height:30px;border-radius:3px;background:var(--amber);transform:translateX(-2px);left:50%;transition:left .25s ease;box-shadow:0 0 10px #cbb68a88}
+.tune .lbl{position:absolute;top:32px;font-family:var(--mono);font-size:10px;color:var(--mut);transform:translateX(-50%)}
+.sub{display:flex;justify-content:space-around;margin-top:10px;font-size:12px;color:var(--mut)}
+.sub b{display:block;font-family:var(--mono);color:var(--txt);font-size:15px;font-weight:500;margin-top:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>button{flex:1;min-width:0;padding:10px 2px;font-size:12.5px;letter-spacing:-.01em}
+.mode{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.mode button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 6px}
+.mode button i{font-style:normal;font-size:11px;color:var(--mut);font-weight:500}
+.mode button.on{border-color:var(--amber);background:#cbb68a14}
+.mode button.on i{color:var(--amber)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--mut);margin-right:6px;vertical-align:1px}
+.dot.live{background:var(--green);box-shadow:0 0 8px var(--green)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.m{background:var(--panel2);border-radius:12px;padding:10px}
+.m .k{font-size:11px;color:var(--mut);font-weight:600;letter-spacing:.03em}
+.m .v{font-family:var(--mono);font-size:17px;margin-top:3px;font-variant-numeric:tabular-nums}
+.m .h{font-size:10px;color:var(--mut);margin-top:1px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--mut);margin:0 0 10px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+h2 em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:500;font-family:var(--mono);font-size:12px}
+canvas{width:100%;display:block}
+.note{font-size:13px;color:var(--mut);line-height:1.45;margin:8px 0 0}
+.note b{color:var(--txt);font-weight:600}
+select{font:inherit;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:14px}
+.kv{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border:0}
+.kv span:last-child{font-family:var(--mono)}
+.hist{font-size:13px}
+.hist .it{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.hist .it:last-child{border:0}
+.hist .it .d{color:var(--mut);font-size:11px}
+.hist .it .r{font-family:var(--mono);text-align:right}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translateX(-50%) translateY(120px);background:#2b2b30;border:1px solid #3a3a40;padding:12px 16px;border-radius:12px;font-size:14px;max-width:min(92vw,520px);transition:transform .3s,opacity .3s;opacity:0;pointer-events:none;z-index:20;line-height:1.4}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.modal{position:fixed;inset:0;background:#000b;display:none;z-index:30;overflow:auto;padding:calc(env(safe-area-inset-top) + 20px) 14px 40px}
+.modal.show{display:block}
+.modal .card{max-width:560px;margin:0 auto}
+.modal h3{margin:14px 0 6px;font-size:15px}
+.modal p,.modal li{font-size:14px;line-height:1.5;color:#cfcdc8}
+.modal ol{padding-left:20px;margin:6px 0}
+.calbar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:8px;display:none}
+.calbar div{height:100%;width:0;background:var(--amber);transition:width .1s linear}
+.hide{display:none!important}
+.pos{color:var(--amber)}.neg{color:var(--blue)}.ok{color:var(--green)}.bad{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#1d1d21" stroke="#3a3a40"/><circle cx="16" cy="16" r="11" fill="none" stroke="#2c2c31"/><circle cx="16" cy="16" r="7.5" fill="none" stroke="#2c2c31"/><circle cx="16" cy="16" r="4" fill="#cbb68a"/><circle cx="16" cy="16" r="1" fill="#111"/></svg>
+    <div><h1>MOSFET</h1><span>Drehzahl · Messlabor</span></div>
+  </div>
+  <button class="iconbtn" id="helpBtn" aria-label="Anleitung">?</button>
+</header>
+
+<div class="card note hide" id="embedNote" style="margin:0 0 12px;padding:12px 14px">Vorschau-Modus: Hier sind Gyroskop und Mikrofon gesperrt, nur <b>Demo</b> funktioniert. Zum Messen die Seite direkt in Safari öffnen (gehostete https-Version).</div>
+<div class="seg" id="target">
+  <button data-v="auto" class="on">Auto</button>
+  <button data-v="16.6667">16</button>
+  <button data-v="33.3333">33⅓</button>
+  <button data-v="45">45</button>
+  <button data-v="78">78</button>
+</div>
+
+<div class="card readout">
+  <div class="src" id="srcLbl">Unten eine Quelle wählen</div>
+  <div class="big" id="rpm">--.---<small>U/min</small></div>
+  <div class="dev" id="dev">±0.00 %</div>
+  <div class="verdict" id="verdict">&nbsp;</div>
+  <div class="tune">
+    <div class="track"></div><div class="ctr"></div><div class="needle" id="needle"></div>
+    <div class="lbl" style="left:0%">−1%</div><div class="lbl" style="left:25%">−0.5</div><div class="lbl" style="left:50%">0</div><div class="lbl" style="left:75%">+0.5</div><div class="lbl" style="left:100%">+1%</div>
+  </div>
+  <div class="sub">
+    <div>Live (4 Umdr.)<b id="live">–</b></div>
+    <div>Mittel gesamt<b id="sess">–</b></div>
+    <div>Tonhöhe<b id="cents">–</b></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="mode">
+    <button id="mGyro"><span><span class="dot" id="dGyro"></span>Teller</span><i>Gyroskop</i></button>
+    <button id="mTone"><span><span class="dot" id="dTone"></span>Messton</span><i>Mikrofon</i></button>
+    <button id="mDemo"><span><span class="dot" id="dDemo"></span>Demo</span><i>simuliert</i></button>
+  </div>
+  <div class="row">
+    <button id="zeroBtn">Gyro nullen</button>
+    <button id="holdBtn">Halten</button>
+    <button id="resetBtn">Reset</button>
+    <button id="saveBtn">Speichern</button>
+  </div>
+  <div class="calbar" id="calbar"><div></div></div>
+  <div class="note hide" id="toneOpts" style="display:flex;gap:10px;align-items:center;margin-top:12px">
+    <span style="flex:1">Ton der Messplatte</span>
+    <select id="f0Sel">
+      <option value="3150">3150 Hz (DIN/IEC)</option>
+      <option value="3000">3000 Hz (NAB/JIS)</option>
+      <option value="1000">1000 Hz</option>
+      <option value="440">440 Hz</option>
+    </select>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Gleichlauf</h2>
+  <div class="grid">
+    <div class="m"><div class="k">WOW ±</div><div class="v" id="wow">–</div><div class="h">max. Abw., 5 Umdr.</div></div>
+    <div class="m"><div class="k">W&amp;F BEW.</div><div class="v" id="wf">–</div><div class="h">Messton · DIN ≈2σ</div></div>
+    <div class="m"><div class="k">W&amp;F UNBEW.</div><div class="v" id="wfu">–</div><div class="h">Messton · eff.</div></div>
+    <div class="m"><div class="k">STREUUNG</div><div class="v" id="r2r">–</div><div class="h">σ je Umdrehung</div></div>
+    <div class="m"><div class="k">DRIFT</div><div class="v" id="drift">–</div><div class="h">% pro Minute</div></div>
+    <div class="m"><div class="k">UMDR.</div><div class="v" id="revs">0</div><div class="h" id="rateH">–</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Drehzahl im Verlauf <em id="tScale"></em></h2>
+  <canvas id="cTime" data-h="170" style="height:170px"></canvas>
+  <p class="note">Gold = geglättete Drehzahl, grün gestrichelt = Sollwert. Eine langsame Welle pro Umdrehung ist Wow, feines Zittern ist Flutter oder Sensorrauschen.</p>
+</div>
+
+<div class="card">
+  <h2>Umdrehungs-Signatur <em id="pScale"></em></h2>
+  <canvas id="cPolar" data-h="300" style="height:300px"></canvas>
+  <p class="note" id="sigNote">Drehzahlabweichung nach Tellerwinkel gemittelt, vergrößert. Ein perfekter Plattenspieler zeichnet einen Kreis.</p>
+</div>
+
+<div class="card">
+  <h2>Kalibrierung</h2>
+  <div class="kv"><span>Gyro-Nullpunkt</span><span id="kBias">nicht gesetzt</span></div>
+  <div class="kv"><span>Gyro-Skalierung</span><span id="kScale">1.00000</span></div>
+  <div class="kv"><span>Toneingang</span><span id="kTone">aus</span></div>
+  <div class="row" style="margin-top:10px">
+    <button id="xcalBtn" disabled>Gyro per Messton kalibrieren</button>
+    <button id="clrCal" style="flex:0 0 auto">Löschen</button>
+  </div>
+  <p class="note">Handy-Gyroskope haben einen kleinen Nullpunktfehler und einen Skalierungsfehler, deshalb liegen Gyro-Apps oft ein paar Zehntelprozent daneben. <b>Gyro nullen</b> entfernt den Nullpunktfehler. Laufen <b>Teller und Messton gleichzeitig</b> (Handy auf der Platte, Messton spielt), korrigiert der quarzgenaue Takt der Soundkarte die Gyro-Skalierung. Danach stimmt auch die reine Gyro-Messung auf jeder Platte.</p>
+</div>
+
+<div class="card">
+  <h2>Verlauf <em><button id="copyBtn" style="padding:5px 10px;font-size:12px">Alles kopieren</button></em></h2>
+  <div class="hist" id="hist"><div class="note">Noch keine gespeicherten Messungen.</div></div>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<div class="modal" id="help">
+  <div class="card">
+    <h2>So wird gemessen <button class="iconbtn" id="helpClose">✕</button></h2>
+    <h3>Teller (Gyroskop), ohne Messplatte</h3>
+    <ol>
+      <li>Handy flach und ruhig auf einen Tisch legen und <b>Gyro nullen</b> tippen (3 s). Einmal pro Handy reicht.</li>
+      <li>Platte auflegen, Tonarm oben. Handy flach auf die Platte legen. Zentrieren ist nicht nötig, das Gyroskop misst die Drehung, nicht die Position. Es darf nur nicht rutschen.</li>
+      <li>Teller starten, <b>Teller</b> tippen, 3–4 Umdrehungen warten. Gerechnet wird über ganze Umdrehungen, Wow verfälscht den Mittelwert also nicht.</li>
+      <li>Pitch bzw. Drehzahl-Trimmer justieren, bis die Nadel im grünen Bereich steht. <b>Live</b> folgt der Justage, <b>Mittel gesamt</b> ist der Langzeitwert.</li>
+    </ol>
+    <h3>Messton (Mikrofon), die Referenzmethode</h3>
+    <ol>
+      <li>Einen Gleichlauf-Messton abspielen (3150 Hz ist Standard, auf den meisten Test-LPs).</li>
+      <li><b>Messton</b> tippen, Frequenz wählen, Handy in die Nähe eines Lautsprechers halten. DSP und Raumkorrektur ausschalten.</li>
+      <li>Ergebnis: absolute Drehzahl plus echte Gleichlaufschwankungen (bewertet und unbewertet). Flutter über ~10 Hz sieht das Gyroskop nicht.</li>
+    </ol>
+    <h3>Höchste Genauigkeit: beides gleichzeitig</h3>
+    <p>Handy auf dem Teller, Messton über die Lautsprecher, beide Quellen an. Nach etwa 10 Umdrehungen <b>Gyro per Messton kalibrieren</b> tippen. Der Doppler-Effekt der Drehung mittelt sich über ganze Umdrehungen heraus.</p>
+    <h3>Ergebnisse lesen</h3>
+    <p><b>±0.1%</b>: ausgezeichnet. <b>±0.3%</b>: für fast alle unhörbar. <b>1%</b> ≈ 17 Cent, bei gehaltenen Tönen für geübte Ohren hörbar. Wow und bewertetes W&amp;F unter 0.1% sind für Vinyl sehr gut. Oft ist die Exzentrizität der Platte selbst der größte Anteil.</p>
+    <p>Umdrehungs-Signatur: eine Ausbeulung pro Umdrehung deutet auf Exzentrizität (Mittelloch, Achse, Teller oder Lager). Mehrere Ausbeulungen oder ausgefranste Kanten deuten auf den Antrieb (Riemen, Reibrad, Motor-Rastmoment).</p>
+    <p class="note">Die Sensoren funktionieren nur, wenn die Seite direkt in Safari oder Chrome über https geöffnet wird, nicht in einer eingebetteten Vorschau. Messwerte bleiben auf dem Gerät.</p>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const EMBED=(()=>{try{return window.self!==window.top}catch(e){return true}})();
+const EMBED_MSG='In der Vorschau sind die Sensoren gesperrt. Bitte die gehostete Version direkt in Safari öffnen, hier geht nur Demo.';
+const NOMINALS=[16.6667,33.3333,45,78];
+const LS={get(k,d){try{const v=localStorage.getItem('mosfet_rpm_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('mosfet_rpm_'+k,JSON.stringify(v))}catch(e){}}};
+
+/* ---------- speed channel: integrates angle, finds whole revolutions ---------- */
+class Channel{
+  constructor(){this.reset()}
+  reset(){this.s=[];this.t0=null;this.lastT=null;this.lp=null;this.angle=0;this.tc=[];this.revRpm=[];
+    this.prof=new Float64Array(36);this.profN=new Float64Array(36);this.count=0;this.lastWall=0;}
+  push(t,rpm){
+    this.lastWall=performance.now();
+    if(this.lastT===null){this.lastT=t;this.t0=t;this.lp=rpm;return}
+    const dt=t-this.lastT;
+    if(!(dt>0)||dt>0.5){this.lastT=t;return}
+    this.lastT=t;this.count++;
+    this.lp+=(1-Math.exp(-2*Math.PI*6*dt))*(rpm-this.lp);       // ~6 Hz low-pass for display
+    if(t-this.t0<1){return}                                       // settle
+    if(!this.tc.length){this.tc.push(t);this.angle=0;return}
+    const prev=this.angle;
+    this.angle+=rpm*6*dt;
+    this.s.push(t,this.lp);
+    if(this.s.length>60000)this.s.splice(0,20000);
+    const bin=Math.floor((this.angle%360)/10);
+    this.prof[bin]+=this.lp;this.profN[bin]++;
+    if(Math.floor(this.angle/360)>Math.floor(prev/360)){
+      // interpolate exact crossing time
+      const over=this.angle-360*Math.floor(this.angle/360);
+      const tc=t-over/(rpm*6);
+      const last=this.tc[this.tc.length-1];
+      this.revRpm.push(60/(tc-last));this.tc.push(tc);
+    }
+  }
+  revs(){return Math.max(0,this.tc.length-1)}
+  live(){const n=this.revs();if(n<1)return this.provisional();const m=Math.min(n,4);return 60*m/(this.tc[n]-this.tc[n-m])}
+  session(){const n=this.revs();if(n<1)return null;return 60*n/(this.tc[n]-this.tc[0])}
+  provisional(){const s=this.s;if(s.length<20)return null;let a=0,c=0;for(let i=1;i<s.length;i+=2){a+=s[i];c++}return a/c}
+  active(){return performance.now()-this.lastWall<1500 && this.count>5}
+  windowSamples(sec){const s=this.s,out=[];if(!s.length)return out;const tEnd=s[s.length-2];for(let i=s.length-2;i>=0;i-=2){if(tEnd-s[i]>sec)break;out.push(s[i],s[i+1])}return out}
+}
+
+const chG=new Channel(), chT=new Channel();
+
+/* ---------- state ---------- */
+let target='auto', hold=false;
+const gyro={on:false,listening:false,bias:LS.get('bias',null),scale:LS.get('scale',1),cal:null,lastEvt:0,evts:[]};
+const demo={on:false,timer:null,t:0,phi:0};
+const tone={on:false,ctx:null,stream:null,proc:null,n:0,prev:0,cross:[],f0:LS.get('f0',3150),M:13,rms:0,emits:0,wq:[],uq:[],wf:null,wf2:null,hpY:0,hpX:0,sr:48000};
+
+function nominalFor(avg){
+  if(target!=='auto')return +target;
+  if(avg==null)return 33.3333;
+  let best=NOMINALS[0];for(const n of NOMINALS)if(Math.abs(avg/n-1)<Math.abs(avg/best-1))best=n;return best;
+}
+function toneNominal(){
+  if(target!=='auto')return +target;
+  if(chG.active()&&chG.session())return nominalFor(chG.session());
+  return 33.3333;
+}
+
+/* ---------- gyroscope ---------- */
+function onMotion(e){
+  const r=e.rotationRate;if(!r||r.alpha==null)return;
+  const now=performance.now();gyro.lastEvt=now;gyro.evts.push(now);if(gyro.evts.length>200)gyro.evts.shift();
+  if(gyro.cal){gyro.cal.push([r.alpha,r.beta||0,r.gamma||0]);return}
+  if(!gyro.on)return;
+  const b=gyro.bias||[0,0,0];
+  const w=Math.hypot(r.alpha-b[0],(r.beta||0)-b[1],(r.gamma||0)-b[2])*gyro.scale;   // deg/s
+  const t=(e.timeStamp||now)/1000;
+  chG.push(t,w/6);
+}
+async function ensureMotion(){
+  if(typeof DeviceMotionEvent==='undefined'){toast('Dieses Gerät bzw. dieser Browser hat keine Bewegungssensoren.');return false}
+  if(typeof DeviceMotionEvent.requestPermission==='function'){
+    try{const p=await DeviceMotionEvent.requestPermission();if(p!=='granted'){toast(EMBED?EMBED_MSG:'Bewegungszugriff abgelehnt. In den Safari-Einstellungen für diese Seite erlauben.');return false}}
+    catch(e){toast(EMBED?EMBED_MSG:'Bewegungssensoren sind hier gesperrt. Seite direkt in Safari öffnen (https).');return false}
+  }
+  if(!gyro.listening){window.addEventListener('devicemotion',onMotion);gyro.listening=true}
+  setTimeout(()=>{if((gyro.on||gyro.cal)&&performance.now()-gyro.lastEvt>1500)toast('Keine Gyro-Daten. Eingebettete Vorschauen sperren Sensoren, Seite direkt in Safari oder Chrome über https öffnen.')},1800);
+  return true;
+}
+async function startGyro(){
+  stopDemo();
+  if(!(await ensureMotion()))return;
+  chG.reset();gyro.on=true;wake();
+  if(!gyro.bias)toast('Tipp: einmal „Gyro nullen“ mit ruhig liegendem Handy, das entfernt den Sensor-Nullpunktfehler.');
+  ui();
+}
+function stopGyro(){gyro.on=false;ui()}
+
+async function zeroGyro(){
+  if(!(await ensureMotion()))return;
+  toast('Handy flach und völlig ruhig liegen lassen … 3 s');
+  gyro.cal=[];const bar=$('calbar');bar.style.display='block';const fill=bar.firstElementChild;const t0=performance.now();
+  const iv=setInterval(()=>{const p=Math.min(1,(performance.now()-t0)/3000);fill.style.width=(p*100)+'%';
+    if(p>=1){clearInterval(iv);bar.style.display='none';fill.style.width='0';
+      const c=gyro.cal;gyro.cal=null;
+      if(!c||c.length<20){toast('Zu wenig Sensordaten. Ist der Bewegungszugriff erlaubt?');return}
+      const m=[0,1,2].map(k=>c.reduce((a,v)=>a+v[k],0)/c.length);
+      const sd=Math.sqrt(c.reduce((a,v)=>a+(v[0]-m[0])**2+(v[1]-m[1])**2+(v[2]-m[2])**2,0)/c.length);
+      if(sd>1.5||Math.hypot(...m)>5){toast('Zu viel Bewegung. Handy auf eine ruhige Fläche legen und erneut versuchen.');return}
+      gyro.bias=m;LS.set('bias',m);toast('Gyro genullt. Abweichung von '+Math.hypot(...m).toFixed(3)+' °/s entfernt.');ui();
+    }},50);
+}
+
+/* ---------- demo ---------- */
+function startDemo(){
+  stopGyro();chG.reset();demo.on=true;demo.t=0;demo.phi=0;
+  demo.timer=setInterval(()=>{for(let i=0;i<5;i++){demo.t+=0.01;
+    const base=33.3333*(1+0.0017)*(1+0.00003*demo.t);
+    const rpm=base*(1+0.0007*Math.sin(demo.phi+0.7)+0.00022*Math.sin(3*demo.phi)+(Math.random()-0.5)*0.0015);
+    demo.phi+=rpm*2*Math.PI/60*0.01;chG.push(demo.t,rpm);}},50);
+  ui();
+}
+function stopDemo(){if(demo.timer)clearInterval(demo.timer);demo.timer=null;demo.on=false;ui()}
+
+/* ---------- test tone ---------- */
+function biquadBP(fc,fs,Q){const w=2*Math.PI*fc/fs,al=Math.sin(w)/(2*Q),c=Math.cos(w),a0=1+al;
+  return{b0:al/a0,b1:0,b2:-al/a0,a1:-2*c/a0,a2:(1-al)/a0,x1:0,x2:0,y1:0,y2:0}}
+function bq(f,x){const y=f.b0*x+f.b1*f.x1+f.b2*f.x2-f.a1*f.y1-f.a2*f.y2;f.x2=f.x1;f.x1=x;f.y2=f.y1;f.y1=y;return y}
+
+async function startTone(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Kein Mikrofon verfügbar. Seite direkt über https öffnen.');return}
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})}
+  catch(e){toast(EMBED?EMBED_MSG:'Mikrofon gesperrt. In den Browser-Einstellungen für diese Seite erlauben.');return}
+  const AC=window.AudioContext||window.webkitAudioContext;const ctx=new AC();try{await ctx.resume()}catch(e){}
+  tone.ctx=ctx;tone.stream=stream;tone.sr=ctx.sampleRate;
+  const src=ctx.createMediaStreamSource(stream);
+  const f1=ctx.createBiquadFilter(),f2=ctx.createBiquadFilter();
+  for(const f of[f1,f2]){f.type='bandpass';f.frequency.value=tone.f0;f.Q.value=3}
+  const proc=ctx.createScriptProcessor(4096,1,1);const mute=ctx.createGain();mute.gain.value=0;
+  src.connect(f1);f1.connect(f2);f2.connect(proc);proc.connect(mute);mute.connect(ctx.destination);
+  tone.proc=proc;tone.filters=[f1,f2];
+  resetToneDSP();chT.reset();
+  proc.onaudioprocess=e=>processTone(e.inputBuffer.getChannelData(0));
+  tone.on=true;wake();ui();
+}
+function resetToneDSP(){
+  tone.n=0;tone.prev=0;tone.cross=[];tone.emits=0;tone.wq=[];tone.uq=[];tone.hpY=0;tone.hpX=0;
+  tone.M=Math.max(1,Math.round(tone.f0/250));
+  const fs=tone.f0/tone.M;
+  tone.fsD=fs;tone.wf=biquadBP(4,fs,0.6);   // approx. DIN/IEC 386 weighting: peak 4 Hz, ≈−4 dB @10 Hz, ≈−13 dB @0.5 Hz
+  tone.hpA=1/(1+2*Math.PI*0.2/fs);                                        // 0.2 Hz high-pass for unweighted
+}
+function stopTone(){
+  if(tone.proc){tone.proc.onaudioprocess=null;try{tone.proc.disconnect()}catch(e){}}
+  if(tone.stream)tone.stream.getTracks().forEach(t=>t.stop());
+  if(tone.ctx)try{tone.ctx.close()}catch(e){}
+  tone.on=false;tone.proc=null;tone.stream=null;tone.ctx=null;ui();
+}
+function processTone(buf){
+  let ss=0;for(let i=0;i<buf.length;i++)ss+=buf[i]*buf[i];
+  tone.rms=Math.sqrt(ss/buf.length);
+  if(tone.rms<0.002){tone.n+=buf.length;tone.prev=buf[buf.length-1];tone.cross=[];return}
+  const sr=tone.sr,M=tone.M,f0=tone.f0;
+  for(let i=0;i<buf.length;i++){
+    const x=buf[i];
+    if(tone.prev<0&&x>=0){
+      const tc=tone.n+i-1+tone.prev/(tone.prev-x);
+      tone.cross.push(tc);
+      if(tone.cross.length===M+1){
+        const f=M*sr/(tc-tone.cross[0]);tone.cross=[tc];
+        const d=f/f0-1;
+        if(Math.abs(d)<0.08){
+          tone.emits++;
+          chT.push(tc/sr,toneNominal()*(1+d));
+          const w=bq(tone.wf,d);
+          const u=tone.hpA*(tone.hpY+d-tone.hpX);tone.hpY=u;tone.hpX=d;
+          if(tone.emits>tone.fsD*2){tone.wq.push(w);tone.uq.push(u);
+            const keep=Math.round(tone.fsD*6);if(tone.wq.length>keep*1.5){tone.wq.splice(0,tone.wq.length-keep);tone.uq.splice(0,tone.uq.length-keep)}}
+        }
+      }
+    }
+    tone.prev=x;
+  }
+  tone.n+=buf.length;
+}
+function rms(a){if(a.length<50)return null;let s=0;for(const v of a)s+=v*v;return Math.sqrt(s/a.length)}
+
+/* ---------- stats ---------- */
+function stats(ch){
+  const live=ch.live(),sess=ch.session(),n=ch.revs();
+  const ref=sess||live;const nom=nominalFor(ref);
+  let wow=null;
+  if(n>=1){const m=Math.min(n,5);const sec=(ch.tc[n]-ch.tc[n-m]);const w=ch.windowSamples(sec);
+    let avg=0,c=0;for(let i=1;i<w.length;i+=2){avg+=w[i];c++}avg/=c;let mx=0;for(let i=1;i<w.length;i+=2)mx=Math.max(mx,Math.abs(w[i]/avg-1));wow=mx*100}
+  let r2r=null,drift=null;const rr=ch.revRpm.slice(-20);
+  if(rr.length>=3){const mu=rr.reduce((a,b)=>a+b,0)/rr.length;r2r=Math.sqrt(rr.reduce((a,b)=>a+(b-mu)**2,0)/(rr.length-1))/mu*100}
+  if(rr.length>=5){const tt=ch.tc.slice(-rr.length);const mt=tt.reduce((a,b)=>a+b,0)/tt.length,mr=rr.reduce((a,b)=>a+b,0)/rr.length;
+    let num=0,den=0;for(let i=0;i<rr.length;i++){num+=(tt[i]-mt)*(rr[i]-mr);den+=(tt[i]-mt)**2}drift=den?num/den*60/mr*100:null}
+  return{live,sess,n,nom,wow,r2r,drift};
+}
+
+/* ---------- UI ---------- */
+const fmtP=(v,d=2)=>v==null?'–':(v>=0?'+':'−')+Math.abs(v).toFixed(d);
+function ui(){
+  $('mGyro').classList.toggle('on',gyro.on);$('mTone').classList.toggle('on',tone.on);$('mDemo').classList.toggle('on',demo.on);
+  $('toneOpts').classList.toggle('hide',!tone.on);$('toneOpts').style.display=tone.on?'flex':'none';
+  $('holdBtn').textContent=hold?'Weiter':'Halten';
+  $('kBias').textContent=gyro.bias?Math.hypot(...gyro.bias).toFixed(3)+' °/s':'nicht gesetzt';
+  $('kScale').textContent=gyro.scale.toFixed(5);
+}
+function primary(){
+  if(tone.on&&chT.active())return{ch:chT,name:'Messton · '+tone.f0+' Hz'};
+  if(demo.on)return{ch:chG,name:'Demo · simulierter Spieler'};
+  if(gyro.on)return{ch:chG,name:'Teller · Gyroskop'+(gyro.scale!==1?' (kalibriert)':'')};
+  if(tone.on)return{ch:chT,name:'Messton · warte auf Signal'};
+  return null;
+}
+let lastNum=0;
+function frame(ts){
+  requestAnimationFrame(frame);
+  if(hold)return;
+  const p=primary();
+  if(ts-lastNum>120){lastNum=ts;numbers(p)}
+  drawTime(p);drawPolar(p);
+}
+function numbers(p){
+  $('dGyro').classList.toggle('live',gyro.on&&chG.active());$('dTone').classList.toggle('live',tone.on&&chT.active());$('dDemo').classList.toggle('live',demo.on);
+  const hz=gyro.evts.length>10?(gyro.evts.length-1)/((gyro.evts[gyro.evts.length-1]-gyro.evts[0])/1000):0;
+  $('kTone').textContent=tone.on?(tone.rms>0.002?(20*Math.log10(tone.rms*1.414)).toFixed(0)+' dBFS':'kein Signal'):'aus';
+  $('xcalBtn').disabled=!(chG.revs()>=6&&chT.revs()>=6&&gyro.on&&tone.on);
+  if(!p){$('srcLbl').textContent='Unten eine Quelle wählen';return}
+  const s=stats(p.ch);
+  $('srcLbl').textContent=p.name;
+  const main=s.live;
+  if(main==null){$('rpm').innerHTML='--.---<small>U/min</small>';$('dev').textContent='messe …';$('dev').className='dev';$('verdict').textContent=p.ch===chT?'Messton in Mikrofonnähe abspielen':'Warte auf Drehung …';$('needle').style.left='50%';}
+  else{
+    const d=(main/s.nom-1)*100;
+    $('rpm').innerHTML=(s.n<1?'~':'')+main.toFixed(3)+'<small>U/min</small>';
+    $('dev').textContent=fmtP(d)+' %';
+    const a=Math.abs(d);$('dev').className='dev '+(a<=0.1?'ok':a<=0.3?'pos':'bad');
+    const dir=d>0?'schnell':'langsam';const dirA=d>0?'zu schnell':'zu langsam';
+    $('verdict').textContent=s.n<1?'Erste Umdrehung läuft …':a<=0.1?'Punktgenau':a<=0.3?'Gut, etwas '+dirA+' (unhörbar)':a<=1?'Läuft '+dirA+': '+(d>0?'herunter':'hinauf')+'regeln':'Viel '+dirA+'. Drehzahlstufe prüfen';
+    $('needle').style.left=(50+Math.max(-1,Math.min(1,d))*50)+'%';
+    $('cents').textContent=fmtP(1200*Math.log2(main/s.nom),1)+' ¢';
+  }
+  $('live').textContent=main==null?'–':fmtP((main/s.nom-1)*100)+' %';
+  $('sess').textContent=s.sess==null?'–':s.sess.toFixed(3);
+  $('wow').textContent=s.wow==null?'–':s.wow.toFixed(3)+'%';
+  $('r2r').textContent=s.r2r==null?'–':s.r2r.toFixed(3)+'%';
+  $('drift').textContent=s.drift==null?'–':fmtP(s.drift,3);
+  $('revs').textContent=s.n;
+  $('rateH').textContent=p.ch===chT?(tone.fsD?tone.fsD.toFixed(0)+' Hz track':'–'):(hz?hz.toFixed(0)+' Hz Gyro':'–');
+  const w=rms(tone.wq),u=rms(tone.uq);
+  $('wf').textContent=tone.on&&w!=null?(2*w*100).toFixed(3)+'%':'–';
+  $('wfu').textContent=tone.on&&u!=null?(u*100).toFixed(3)+'%':'–';
+}
+
+/* ---------- canvases ---------- */
+function prep(c){const dpr=window.devicePixelRatio||1,w=c.clientWidth,h=+c.dataset.h;
+  if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr)}
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);return[g,w,h]}
+function drawTime(p){
+  const[g,W,H]=prep($('cTime'));
+  g.font='10px JetBrains Mono, monospace';g.fillStyle='#a09e99';
+  if(!p){g.fillText('keine Daten',W/2-30,H/2);return}
+  const s=p.ch.windowSamples(20);if(s.length<4){g.fillText('warte …',W/2-24,H/2);return}
+  const st=stats(p.ch),nom=st.nom;
+  let mx=0.1;for(let i=1;i<s.length;i+=2)mx=Math.max(mx,Math.abs(s[i]/nom-1)*100);
+  const R=Math.max(0.25,Math.ceil(mx*1.15*20)/20);$('tScale').textContent='±'+R.toFixed(2)+'% · 20 s';
+  const pad=4,y=v=>H/2-(v/R)*(H/2-pad);const tEnd=s[0],x=t=>W-(tEnd-t)/20*W;
+  g.strokeStyle='#2c2e33';g.lineWidth=1;for(const v of[-R/2,R/2]){g.beginPath();g.moveTo(0,y(v));g.lineTo(W,y(v));g.stroke()}
+  g.setLineDash([4,4]);g.strokeStyle='#90ba8b';g.beginPath();g.moveTo(0,y(0));g.lineTo(W,y(0));g.stroke();g.setLineDash([]);
+  if(st.live){g.strokeStyle='#cbb68a55';const yv=y((st.live/nom-1)*100);g.beginPath();g.moveTo(0,yv);g.lineTo(W,yv);g.stroke()}
+  g.strokeStyle='#cbb68a';g.lineWidth=1.6;g.beginPath();
+  for(let i=s.length-2;i>=0;i-=2){const X=x(s[i]),Y=y((s[i+1]/nom-1)*100);i===s.length-2?g.moveTo(X,Y):g.lineTo(X,Y)}g.stroke();
+  g.fillStyle='#a09e99';g.fillText('+'+R.toFixed(2)+'%',4,12);g.fillText('−'+R.toFixed(2)+'%',4,H-5);
+}
+function drawPolar(p){
+  const[g,W,H]=prep($('cPolar'));const cx=W/2,cy=H/2,R0=Math.min(W,H)*0.3;
+  g.strokeStyle='#2c2e33';g.lineWidth=1;g.beginPath();g.arc(cx,cy,R0,0,7);g.stroke();
+  g.font='10px JetBrains Mono, monospace';g.fillStyle='#a09e99';
+  if(!p||p.ch.revs()<1){g.fillText('braucht eine volle Umdrehung',cx-84,cy+4);$('pScale').textContent='';return}
+  const ch=p.ch,m=[];let tot=0,c=0;for(let i=0;i<36;i++){const v=ch.profN[i]?ch.prof[i]/ch.profN[i]:null;m.push(v);if(v!=null){tot+=v;c++}}
+  const mean=tot/c;const dv=m.map(v=>v==null?0:(v/mean-1)*100);
+  const mx=Math.max(0.02,...dv.map(Math.abs));const k=(R0*0.55)/mx;
+  $('pScale').textContent='±'+mx.toFixed(3)+'%';
+  g.setLineDash([3,4]);for(const r of[R0-mx*k,R0+mx*k]){g.beginPath();g.arc(cx,cy,r,0,7);g.stroke()}g.setLineDash([]);
+  g.strokeStyle='#cbb68a';g.lineWidth=2;g.fillStyle='#cbb68a18';g.beginPath();
+  for(let i=0;i<=36;i++){const j=i%36,a=-Math.PI/2+(j+0.5)/36*2*Math.PI,r=R0+dv[j]*k;const X=cx+Math.cos(a)*r,Y=cy+Math.sin(a)*r;i?g.lineTo(X,Y):g.moveTo(X,Y)}
+  g.closePath();g.fill();g.stroke();
+  g.fillStyle='#a09e99';g.fillText('außen = schneller',8,H-8);
+  // harmonic analysis
+  const h=[1,2,3].map(n=>{let re=0,im=0;for(let j=0;j<36;j++){const a=2*Math.PI*n*j/36;re+=dv[j]*Math.cos(a);im+=dv[j]*Math.sin(a)}return 2*Math.hypot(re,im)/36});
+  const tot2=Math.sqrt(dv.reduce((a,b)=>a+b*b,0)/36)*Math.SQRT2;
+  let txt='1× pro Umdr.: ±'+h[0].toFixed(3)+'% · 2×: ±'+h[1].toFixed(3)+'% · 3×: ±'+h[2].toFixed(3)+'%. ';
+  if(ch.revs()<3)txt+='Für ein stabiles Bild noch ein paar Umdrehungen laufen lassen.';
+  else if(h[0]<0.03&&tot2<0.05)txt+='Sehr sauberer Lauf.';
+  else if(h[0]>=Math.max(h[1],h[2])*1.5)txt+='Dominiert von einem Anteil 1× pro Umdrehung: Exzentrizität (Mittelloch, Achse, Teller oder Lager) oder ein nicht waagrechter Teller.';
+  else txt+='Mehrfaches Muster: deutet eher auf den Antrieb (Riemenstärke, Pulley/Reibrad, Motor-Rastmoment) als auf die Platte.';
+  if(ts_lastSig++%15===0)$('sigNote').textContent=txt;
+}
+let ts_lastSig=0;
+
+/* ---------- misc ---------- */
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),4200)}
+let wl=null;async function wake(){try{if('wakeLock' in navigator&&!wl){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>wl=null)}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&(gyro.on||tone.on||demo.on))wake()});
+
+function history(){return LS.get('hist',[])}
+function renderHist(){
+  const h=history();const el=$('hist');
+  if(!h.length){el.innerHTML='<div class="note">Noch keine gespeicherten Messungen.</div>';return}
+  el.innerHTML=h.slice().reverse().map(e=>`<div class="it"><div>${e.label}<div class="d">${new Date(e.ts).toLocaleString('de-AT')} · ${e.src} · ${e.revs} Umdr.</div></div><div class="r">${e.rpm.toFixed(3)}<br><span class="${Math.abs(e.dev)<=0.1?'ok':Math.abs(e.dev)<=0.3?'pos':'bad'}">${fmtP(e.dev)}%</span></div></div>`).join('');
+}
+function summary(e){return `${new Date(e.ts).toLocaleString('de-AT')} | ${e.src} | ${e.rpm.toFixed(3)} U/min (${fmtP(e.dev)}% zu ${e.nom}) | Wow ±${e.wow==null?'–':e.wow.toFixed(3)}% | W&F bew. ${e.wf==null?'–':e.wf.toFixed(3)}% | ${e.revs} Umdr.`}
+
+/* ---------- wiring ---------- */
+$('target').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;target=b.dataset.v;
+  [...$('target').children].forEach(x=>x.classList.toggle('on',x===b));});
+$('mGyro').onclick=()=>gyro.on?stopGyro():startGyro();
+$('mTone').onclick=()=>tone.on?stopTone():startTone();
+$('mDemo').onclick=()=>demo.on?stopDemo():startDemo();
+$('zeroBtn').onclick=zeroGyro;
+$('holdBtn').onclick=()=>{hold=!hold;ui()};
+$('resetBtn').onclick=()=>{chG.reset();chT.reset();if(tone.on)resetToneDSP();toast('Messung zurückgesetzt.')};
+$('saveBtn').onclick=()=>{const p=primary();if(!p){toast('Noch nichts zu speichern.');return}const s=stats(p.ch);const v=s.sess||s.live;if(!v||s.n<2){toast('Erst mindestens 2 Umdrehungen laufen lassen.');return}
+  const w=rms(tone.wq);
+  const e={ts:Date.now(),src:p.ch===chT?'Messton':demo.on?'Demo':'Gyro',rpm:v,nom:+s.nom.toFixed(2),dev:(v/s.nom-1)*100,wow:s.wow,wf:p.ch===chT&&w!=null?2*w*100:null,revs:s.n,label:(s.nom>33&&s.nom<34?'33⅓':s.nom>16&&s.nom<17?'16⅔':s.nom)+' U/min'};
+  const h=history();h.push(e);LS.set('hist',h.slice(-50));renderHist();toast('Gespeichert.');};
+$('copyBtn').onclick=async()=>{const h=history();if(!h.length){toast('Verlauf ist leer.');return}
+  try{await navigator.clipboard.writeText(h.map(summary).join('\n'));toast(h.length+' Messungen kopiert.')}catch(e){toast('Zwischenablage hier nicht verfügbar.')}};
+$('xcalBtn').onclick=()=>{const g=chG.session(),t=chT.session();if(!g||!t)return;const f=gyro.scale*t/g;
+  if(Math.abs(f-1)>0.05){toast('Abweichung über 5%. Tonfrequenz und Drehzahlstufe prüfen.');return}
+  gyro.scale=f;LS.set('scale',f);chG.reset();ui();toast('Gyro-Skalierung auf '+f.toFixed(5)+' gesetzt ('+fmtP((f-1)*100,3)+'%).');};
+$('clrCal').onclick=()=>{gyro.bias=null;gyro.scale=1;LS.set('bias',null);LS.set('scale',1);chG.reset();ui();toast('Kalibrierung gelöscht.')};
+$('f0Sel').value=String(tone.f0);
+$('f0Sel').onchange=e=>{tone.f0=+e.target.value;LS.set('f0',tone.f0);if(tone.filters)tone.filters.forEach(f=>f.frequency.value=tone.f0);resetToneDSP();chT.reset();};
+$('helpBtn').onclick=()=>$('help').classList.add('show');
+$('helpClose').onclick=()=>$('help').classList.remove('show');
+$('help').onclick=e=>{if(e.target.id==='help')$('help').classList.remove('show')};
+
+if(EMBED)$('embedNote').classList.remove('hide');
+ui();renderHist();requestAnimationFrame(frame);
+if(!LS.get('seen',false)){LS.set('seen',true);setTimeout(()=>$('help').classList.add('show'),400)}
+</script>
+</body>
+</html>
